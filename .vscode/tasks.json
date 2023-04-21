@@ -1,0 +1,113 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "BuildAndDebug",
+            "type": "shell",
+            "command": "/usr/bin/g++",
+            "dependsOn": "CreateBuildDir",
+            "args": [
+                "-std=c++17",
+                "-I${workspaceFolder}/../..",
+                "-I/usr/local/include/opencv4",
+                "-I${workspaceFolder}/darknet/include",
+                "-L/usr/local/lib", 
+                "-L${workspaceFolder}/darknet/build_release",
+                "-g",
+                "${file}",
+                "-o",
+                "${workspaceFolder}/build/${fileBasenameNoExtension}",                
+                "-lopencv_core",
+                "-lopencv_imgcodecs",
+                "-lopencv_imgproc",
+                "-lopencv_highgui",
+                "-lopencv_videoio",
+                "-lopencv_dnn",
+                "-ldarknet",
+                "-lzmq"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "CreateBuildDir",
+            "type": "shell",
+            "command": "mkdir",
+            "args": [
+                "-p",
+                "${workspaceFolder}/build"
+            ],
+            "problemMatcher": []
+        },        
+        {
+            "type": "cppbuild",
+            "label": "Build",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-std=c++17",
+                "-I${workspaceFolder}/../..",
+                "-I/usr/local/include/opencv4",
+                "-I${workspaceFolder}/darknet/include",
+                "-L/usr/local/lib", 
+                "-L${workspaceFolder}/darknet/build_release",
+                "-g",
+                "${file}",
+                "-o",
+                "${workspaceFolder}/build/${fileBasenameNoExtension}",                
+                "-lopencv_core",
+                "-lopencv_imgcodecs",
+                "-lopencv_imgproc",
+                "-lopencv_highgui",
+                "-lopencv_videoio",
+                "-lopencv_dnn",
+                "-ldarknet",
+                "-lzmq"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "compiler: /usr/bin/g++"
+        },
+        {
+            "type": "cppbuild",
+            "label": "Build_min",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-std=c++17",
+                "-I${workspaceFolder}/../..",
+                "-I/usr/local/include/opencv4",
+                "-L/usr/local/lib", 
+                "-g",
+                "${file}",
+                "-o",
+                "${workspaceFolder}/build/${fileBasenameNoExtension}",                
+                "-lopencv_core",
+                "-lopencv_imgcodecs",
+                "-lopencv_imgproc",
+                "-lopencv_highgui",
+                "-lopencv_videoio"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "compiler: /usr/bin/g++"
+        }
+    ]
+}

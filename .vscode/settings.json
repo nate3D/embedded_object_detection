@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "iostream": "cpp",
+        "memory": "cpp",
+        "memory_resource": "cpp",
+        "shared_mutex": "cpp",
+        "condition_variable": "cpp"
+    }
+}

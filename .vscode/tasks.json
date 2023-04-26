@@ -2,7 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "BuildAndDebug",
+            "label": "BuildAndDebugObjectDetect",
             "type": "shell",
             "command": "/usr/bin/g++",
             "dependsOn": "CreateBuildDir",
@@ -25,6 +25,36 @@
                 "-lopencv_dnn",
                 "-ldarknet",
                 "-lzmq"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },   
+        {
+            "label": "BuildAndDebugAWSClient",
+            "type": "shell",
+            "command": "/usr/bin/g++",
+            "dependsOn": "CreateBuildDir",
+            "args": [
+                "-std=c++17",
+                "-I${workspaceFolder}/../..",
+                "-I/usr/local/include/opencv4",
+                "-L/usr/local/lib", 
+                "-g",
+                "${file}",
+                "-o",
+                "${workspaceFolder}/build/${fileBasenameNoExtension}",                
+                "-lopencv_core",
+                "-lopencv_imgcodecs",
+                "-lopencv_imgproc",
+                "-lopencv_highgui",
+                "-lopencv_videoio",
+                "-lzmq",
+                "-laws-cpp-sdk-iot",
+                "-laws-cpp-sdk-core",
+                "-laws-cpp-sdk-s3"
             ],
             "group": {
                 "kind": "build",
@@ -64,7 +94,10 @@
                 "-lopencv_videoio",
                 "-lopencv_dnn",
                 "-ldarknet",
-                "-lzmq"
+                "-lzmq",
+                "-laws-cpp-sdk-iot",
+                "-laws-cpp-sdk-core",
+                "-laws-cpp-sdk-s3"
             ],
             "options": {
                 "cwd": "${fileDirname}"

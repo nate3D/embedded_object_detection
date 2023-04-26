@@ -19,7 +19,28 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "BuildAndDebug",
+            "preLaunchTask": "BuildAndDebugObjectDetect",
+            "miDebuggerPath": "/usr/bin/gdb"
+        },
+        {
+            "name": "Debug aws_client",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/aws_client",
+            "args": ["--debug"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "BuildAndDebugAWSClient",
             "miDebuggerPath": "/usr/bin/gdb"
         }
     ]

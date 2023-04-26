@@ -4,6 +4,7 @@
         "memory": "cpp",
         "memory_resource": "cpp",
         "shared_mutex": "cpp",
-        "condition_variable": "cpp"
+        "condition_variable": "cpp",
+        "sstream": "cpp"
     }
 }

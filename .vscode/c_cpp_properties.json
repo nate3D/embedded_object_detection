@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/local/include/opencv4"
+                "/usr/local/include/opencv4",
+                "/usr/local/lib"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/g++",

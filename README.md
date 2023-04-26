@@ -19,7 +19,7 @@ $ sudo apt install libjpeg-dev libpng-dev libtiff-dev gfortran openexr libatlas-
 $ sudo apt install python3-dev python3-numpy libtbb2 libtbb-dev libdc1394-22-dev
 ```
 
-### Dependencies
+## Dependencies
 #
 #### OpenCV
 
@@ -55,12 +55,12 @@ $ cmake
 \-DOPENCV_EXTRA_MODULES_PATH=~/opencv_with_contrib/opencv_contrib/modules 
 \-DBUILD_opencv_legacy=OFF -DWITH_QT=ON 
 \-DCMAKE_INSTALL_PREFIX=/usr/local ../opencv
-$ make -j5
+$ make -j8
 $ make install
 ```
 Note you may need to install with `sudo` if you get permission errors.
 
-#### [Darknet](https://pjreddie.com/darknet/)
+### [Darknet](https://pjreddie.com/darknet/)
 * Clone the darknet repo
 ```
 $ cd <WORKSPACE_ROOT>
@@ -73,6 +73,22 @@ cd build_release
 cmake ..
 cmake --build . --target install --parallel 8
 ```
+
+### [AWS C++ SDK](https://docs.aws.amazon.com/sdk-for-cpp/v1/developer-guide/setup-linux.html)
+* Clone the AWS C++ SDK repo
+```
+$ cd <WORKSPACE_ROOT>
+$ git clone --recurse-submodules https://github.com/aws/aws-sdk-cpp
+```
+* Build the project
+```
+mkdir build_release
+cd build_release
+cmake ../aws-sdk-cpp -DCMAKE_BUILD_TYPE=[Debug | Release] -DCMAKE_PREFIX_PATH=/usr/local/ -DCMAKE_INSTALL_PREFIX=/usr/local/-DBUILD_ONLY="iot;core;s3"
+make -j8
+make install
+```
+Note you may need to install with `sudo` if you get permission errors.
 
 ### Installing & Executing program
 

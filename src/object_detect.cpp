@@ -4,6 +4,7 @@
 #include <chrono>
 #include <filesystem>
 #include <iomanip>
+#include <thread>
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/dnn.hpp>
@@ -18,11 +19,15 @@ struct DetectionEvent {
     std::string video_clip_path;
 };
 
-void detect_objects(cv::Mat& frame, cv::dnn::Net& net, const std::vector<std::string>& class_names, bool draw_boxes, const std::set<int>& desired_class_ids, zmq::socket_t& event_socket);
+bool detect_objects(cv::Mat& frame, cv::dnn::Net& net, const std::vector<std::string>& class_names, const std::set<int>& desired_class_ids, zmq::socket_t& event_socket, std::vector<DetectionEvent>& detected_events);
 void draw_detection_box(cv::Mat& frame, int left, int top, int right, int bottom, const std::string& label);
+void send_detection_event(zmq::socket_t& socket, const DetectionEvent& event);
 
 int main(int argc, char** argv) {
     bool use_webcam = false; // Default to ZeroMQ stream
+    bool is_recording = false;
+    bool event_in_progress = false;
+
     std::set<int> desired_class_ids = {0, 14, 15, 16}; // Only detect these classes (person, bird, cat, dog)
     int fps = 10; // Desired frames per second to process for detection
 
@@ -33,6 +38,12 @@ int main(int argc, char** argv) {
     // Setup timer for FPS
     std::chrono::milliseconds frame_interval(1000 / fps);
     std::chrono::steady_clock::time_point next_frame_time = std::chrono::steady_clock::now();
+
+    // Setup timer for video clip timing
+    std::chrono::steady_clock::time_point end_recording_time;
+    cv::VideoWriter video_writer;
+    std::chrono::steady_clock::time_point last_detection_time;
+    std::vector<DetectionEvent> detected_events;
 
     // Setup the model path dynamically
     std::filesystem::path exe_path = std::filesystem::current_path();
@@ -58,6 +69,10 @@ int main(int argc, char** argv) {
         coco_file.close();
     }
 
+    // Initialize ZeroMQ context and socket
+    zmq::context_t context(1);
+    zmq::socket_t socket(context, ZMQ_SUB);
+
     // Open the video feed
     cv::VideoCapture cap;
     if (use_webcam) {
@@ -66,27 +81,20 @@ int main(int argc, char** argv) {
             std::cerr << "Failed to open the video device" << std::endl;
             return 1;
         }
+    } else {
+        socket.connect("tcp://172.25.64.1:5555");
+        socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
     }
-
-    // Set up ZeroMQ context and socket
-    zmq::context_t context(1);
-    zmq::socket_t socket(context, ZMQ_SUB);
-    socket.connect("tcp://172.25.64.1:5555");
-    socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
 
     // Set up ZeroMQ socket for sending detection events
     zmq::socket_t event_socket(context, ZMQ_PUB);
     event_socket.bind("tcp://*:5556");
 
-    cv::namedWindow("Object Detection", cv::WINDOW_NORMAL);
-
-    bool draw_boxes = true;
 
     while (true) {
         cv::Mat frame;
-        if (use_webcam) {
-            cap >> frame;
-        } else {
+        cap >> frame;
+        if (!use_webcam) {
             zmq::message_t message;
             socket.recv(&message);
 
@@ -96,28 +104,51 @@ int main(int argc, char** argv) {
         }
 
         if (frame.empty()) {
+            std::cerr << "Empty frame received" << std::endl;
             break;
         }
 
-        auto now = std::chrono::steady_clock::now();
-        if (now >= next_frame_time) {
-            detect_objects(frame, net, class_names, draw_boxes, desired_class_ids, event_socket);
-            cv::imshow("Object Detection", frame);
-            next_frame_time = now + frame_interval;
+        // Limit the frame processing rate
+        std::this_thread::sleep_until(next_frame_time);
+        next_frame_time += frame_interval;
+
+        // Detect objects
+        bool detection_occurred = detect_objects(frame, net, class_names, desired_class_ids, event_socket, detected_events);
+
+        // If an event is not in progress and a detection occurred, start recording
+        if (!event_in_progress && detection_occurred) {
+            event_in_progress = true;
+            is_recording = true;
+            end_recording_time = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+            std::time_t timestamp = std::time(nullptr);
+            std::stringstream filename_ss;
+            filename_ss << "event_" << std::put_time(std::localtime(&timestamp), "%Y%m%d%H%M%S") << ".avi";
+            std::string video_clip_path = "video_clips/" + filename_ss.str();
+            video_writer.open(video_clip_path, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), 10, frame.size());
         }
-        
-        // Exit the loop if the user presses 'q'
-        int key = cv::waitKey(1) & 0xFF;
-        if (key == 'q' || key == 'Q') {
-            break;
+
+        // If an event is in progress, record the frame
+        if (is_recording) {
+            video_writer.write(frame);
+        }
+
+        // If an event is in progress and recording should stop, finalize and send events
+        if (event_in_progress && std::chrono::steady_clock::now() >= end_recording_time) {
+            event_in_progress = false;
+            is_recording = false;
+            video_writer.release();
+
+            for (const DetectionEvent& event : detected_events) {
+                send_detection_event(event_socket, event);
+            }
+
+            detected_events.clear();
         }
     }
 
-    if (use_webcam) {
-        cap.release();
-    }
-
-    cv::destroyAllWindows();
+    cap.release();
+    event_socket.close();
+    context.close();
 
     return 0;
 }
@@ -159,6 +190,7 @@ void send_detection_event(zmq::socket_t& socket, const DetectionEvent& event) {
     json_data << R"({"class_name":")" << event.class_name << R"(",)";
     json_data << R"("confidence":)" << event.confidence << R"(,)";
     json_data << R"("timestamp":)" << event.timestamp << R"(,)";
+    json_data << R"("video_clip_path":)" << event.video_clip_path << R"(,)";
     json_data << R"("frame":")" << base64_encode(buffer.data(), buffer.size()) << R"("})";
 
     // Send the JSON object as a string over ZeroMQ
@@ -166,7 +198,8 @@ void send_detection_event(zmq::socket_t& socket, const DetectionEvent& event) {
     socket.send(zmq_message, zmq::send_flags::none);
 }
 
-void detect_objects(cv::Mat& frame, cv::dnn::Net& net, const std::vector<std::string>& class_names, bool draw_boxes, const std::set<int>& desired_class_ids, zmq::socket_t& event_socket) {
+bool detect_objects(cv::Mat& frame, cv::dnn::Net& net, const std::vector<std::string>& class_names, const std::set<int>& desired_class_ids, zmq::socket_t& event_socket, std::vector<DetectionEvent>& detected_events) {
+    bool draw_boxes = true;
     cv::Mat blob = cv::dnn::blobFromImage(frame, 1 / 255.0, cv::Size(320, 320), cv::Scalar(0, 0, 0), true, false);
     net.setInput(blob);
 
@@ -186,7 +219,6 @@ void detect_objects(cv::Mat& frame, cv::dnn::Net& net, const std::vector<std::st
             cv::minMaxLoc(scores, nullptr, &confidence, nullptr, &class_id_point);
 
             if (confidence > 0.5) {
-                // Check if the detected class ID is in the desired_class_ids set
                 if (desired_class_ids.count(class_id_point.x) > 0) {
                     int centerX = (int)(data[0] * frame.cols);
                     int centerY = (int)(data[1] * frame.rows);
@@ -206,6 +238,7 @@ void detect_objects(cv::Mat& frame, cv::dnn::Net& net, const std::vector<std::st
     std::vector<int> indices;
     cv::dnn::NMSBoxes(boxes, confidences, 0.5, 0.4, indices);
 
+    bool object_detected = false;
     for (int index : indices) {
         cv::Rect box = boxes[index];
         int class_id = class_ids[index];
@@ -215,17 +248,14 @@ void detect_objects(cv::Mat& frame, cv::dnn::Net& net, const std::vector<std::st
             draw_detection_box(frame, box.x, box.y, box.x + box.width, box.y + box.height, label);
         }
 
-        // Send detection event if the detected class is a person or an animal
         if (desired_class_ids.count(class_id) > 0) {
-            DetectionEvent event;
-            event.frame = frame.clone();
-            event.class_name = class_names[class_id];
-            event.confidence = confidences[index];
-            event.timestamp = std::time(nullptr);
-
-            send_detection_event(event_socket, event);
+            DetectionEvent event{frame.clone(), class_names[class_id], confidences[index], std::time(nullptr), ""};
+            detected_events.push_back(event);
+            object_detected = true;
         }
     }
+
+    return object_detected;
 }
 
 void draw_detection_box(cv::Mat& frame, int left, int top, int right, int bottom, const std::string& label) {

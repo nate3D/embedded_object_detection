@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
     bool event_in_progress = false;
     int input_fps = 30; // Assume input FPS is 30
     std::set<int> desired_class_ids = {0, 14, 15, 16}; // Only detect these classes (person, bird, cat, dog)
-    int fps = 5; // Desired frames per second to process for detection
+    int fps = 1; // Desired frames per second to process for detection
     int frame_skip_factor = input_fps / fps;
 
     if (argc > 1 && strcmp(argv[1], "webcam") == 0) {
@@ -76,6 +76,11 @@ int main(int argc, char** argv) {
     cv::VideoCapture cap;
     if (use_webcam) {
         cap.open(0); // Capture from the webcam
+        int frame_width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
+        int frame_height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+        std::cout << "Frame size : " << frame_width << " x " << frame_height << std::endl;
+        cap.set(cv::CAP_PROP_FRAME_WIDTH, 640); // set the width to 640 pixels
+        cap.set(cv::CAP_PROP_FRAME_HEIGHT, 480); // set the height to 480 pixels   
         if (!cap.isOpened()) {
             std::cerr << "Failed to open the video device" << std::endl;
             return 1;

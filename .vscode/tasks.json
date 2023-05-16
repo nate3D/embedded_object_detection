@@ -9,10 +9,8 @@
             "args": [
                 "-std=c++17",
                 "-I${workspaceFolder}/../..",
-                "-I/usr/local/include/opencv4",
-                "-I${workspaceFolder}/darknet/include",
-                "-L/usr/local/lib", 
-                "-L${workspaceFolder}/darknet/build_release",
+                "-I/usr/include/opencv4",
+                "-L/usr/lib/aarch64-linux-gnu",
                 "-g",
                 "${file}",
                 "-o",
@@ -23,8 +21,8 @@
                 "-lopencv_highgui",
                 "-lopencv_videoio",
                 "-lopencv_dnn",
-                "-ldarknet",
-                "-lzmq"
+                "-lzmq",
+                "-lstdc++fs"
             ],
             "group": {
                 "kind": "build",
@@ -40,8 +38,8 @@
             "args": [
                 "-std=c++17",
                 "-I${workspaceFolder}/../..",
-                "-I/usr/local/include/opencv4",
-                "-L/usr/local/lib", 
+                "-I/usr/include/opencv4",
+                "-L/usr/lib/aarch64-linux-gnu",
                 "-g",
                 "${file}",
                 "-o",
@@ -52,6 +50,7 @@
                 "-lopencv_highgui",
                 "-lopencv_videoio",
                 "-lzmq",
+                "-lstdc++fs",
                 "-laws-cpp-sdk-iot",
                 "-laws-cpp-sdk-core",
                 "-laws-cpp-sdk-s3"
@@ -79,10 +78,8 @@
             "args": [
                 "-std=c++17",
                 "-I${workspaceFolder}/../..",
-                "-I/usr/local/include/opencv4",
-                "-I${workspaceFolder}/darknet/include",
-                "-L/usr/local/lib", 
-                "-L${workspaceFolder}/darknet/build_release",
+                "-I/usr/include/opencv4",
+                "-L/usr/lib/aarch64-linux-gnu",
                 "-g",
                 "${file}",
                 "-o",
@@ -93,8 +90,8 @@
                 "-lopencv_highgui",
                 "-lopencv_videoio",
                 "-lopencv_dnn",
-                "-ldarknet",
                 "-lzmq",
+                "-lstdc++fs",
                 "-laws-cpp-sdk-iot",
                 "-laws-cpp-sdk-core",
                 "-laws-cpp-sdk-s3"
@@ -118,8 +115,8 @@
             "args": [
                 "-std=c++17",
                 "-I${workspaceFolder}/../..",
-                "-I/usr/local/include/opencv4",
-                "-L/usr/local/lib", 
+                "-I/usr/include/opencv4",
+                "-L/usr/lib/aarch64-linux-gnu",
                 "-g",
                 "${file}",
                 "-o",

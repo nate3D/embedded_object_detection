@@ -7,10 +7,21 @@
                 "/usr/local/include/opencv4",
                 "/usr/local/lib"
             ],
+            "compilerArgs": [
+                "-I/usr/local/include/opencv4",
+                "-I/repos/darknet/include",
+                "-L/usr/local/lib",
+                "-L/repos/darknet",
+                "-lopencv_core",
+                "-lopencv_highgui",
+                "-lopencv_imgproc",
+                "-lopencv_dnn",
+                "-ldarknet"
+            ],
             "defines": [],
             "compilerPath": "/usr/bin/g++",
             "cStandard": "c17",
-            "cppStandard": "c++17",
+            "cppStandard": "c++20",
             "intelliSenseMode": "linux-gcc-x64",
             "configurationProvider": "ms-vscode.makefile-tools"
         }

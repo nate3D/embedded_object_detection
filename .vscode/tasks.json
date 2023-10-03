@@ -9,8 +9,8 @@
             "args": [
                 "-std=c++17",
                 "-I${workspaceFolder}/../..",
-                "-I/usr/include/opencv4",
-                "-L/usr/lib/aarch64-linux-gnu",
+                "-I/usr/local/include/opencv4",
+                "-L/usr/local/lib",
                 "-g",
                 "${file}",
                 "-o",
